@@ -1,0 +1,95 @@
+syntax = "proto3";
+package flight;
+option go_package = "flight-booking/gen/flight";
+import "google/protobuf/timestamp.proto";
+
+enum FlightStatus {
+  FLIGHT_STATUS_UNSPECIFIED = 0;
+  FLIGHT_STATUS_SCHEDULED = 1;
+  FLIGHT_STATUS_DEPARTED = 2;
+  FLIGHT_STATUS_CANCELLED = 3;
+  FLIGHT_STATUS_COMPLETED = 4;
+}
+
+enum ReservationStatus {
+  RESERVATION_STATUS_UNSPECIFIED = 0;
+  RESERVATION_STATUS_ACTIVE = 1;
+  RESERVATION_STATUS_RELEASED = 2;
+  RESERVATION_STATUS_EXPIRED = 3;
+}
+
+message FlightInfo {
+  string id = 1;
+  string flight_number = 2;
+  string airline = 3;
+  string origin = 4;
+  string destination = 5;
+  google.protobuf.Timestamp departure_time = 6;
+  google.protobuf.Timestamp arrival_time = 7;
+  int32 total_seats = 8;
+  int32 available_seats = 9;
+  double price = 10;
+  FlightStatus status = 11;
+}
+
+message SeatReservationInfo {
+  string id = 1;
+  string flight_id = 2;
+  string booking_id = 3;
+  int32 seat_count = 4;
+  ReservationStatus status = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message SearchFlightsRequest {
+  string origin = 1;
+  string destination = 2;
+  string date = 3;
+}
+message SearchFlightsResponse {
+  repeated FlightInfo flights = 1;
+}
+
+message GetFlightRequest {
+  string id = 1;
+}
+message GetFlightResponse {
+  FlightInfo flight = 1;
+}
+
+message ReserveSeatsRequest {
+  string flight_id = 1;
+  string booking_id = 2;
+  int32 seat_count = 3;
+}
+message ReserveSeatsResponse {
+  SeatReservationInfo reservation = 1;
+}
+
+message ReleaseReservationRequest {
+  string booking_id = 1;
+}
+message ReleaseReservationResponse {
+  SeatReservationInfo reservation = 1;
+}
+
+message UpdateFlightRequest {
+  string id = 1;
+  optional string flight_number = 2;
+  optional string airline = 3;
+  optional string origin = 4;
+  optional string destination = 5;
+  optional double price = 6;
+  optional FlightStatus status = 7;
+}
+message UpdateFlightResponse {
+  FlightInfo flight = 1;
+}
+
+service FlightService {
+  rpc SearchFlights(SearchFlightsRequest) returns (SearchFlightsResponse);
+  rpc GetFlight(GetFlightRequest) returns (GetFlightResponse);
+  rpc ReserveSeats(ReserveSeatsRequest) returns (ReserveSeatsResponse);
+  rpc ReleaseReservation(ReleaseReservationRequest) returns (ReleaseReservationResponse);
+  rpc UpdateFlight(UpdateFlightRequest) returns (UpdateFlightResponse);
+}
