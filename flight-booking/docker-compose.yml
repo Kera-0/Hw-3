@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   booking-db:
     image: postgres:16-alpine
@@ -15,6 +16,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - appnet
 
   flight-db:
     image: postgres:16-alpine
@@ -31,6 +34,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - appnet
 
   redis-master:
     image: redis:7-alpine
@@ -41,7 +46,9 @@ services:
       test: ["CMD", "redis-cli", "-a", "redis_pass", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+    networks:
+      - appnet
 
   redis-replica:
     image: redis:7-alpine
@@ -49,6 +56,13 @@ services:
     depends_on:
       redis-master:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis_pass", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - appnet
 
   redis-sentinel-1:
     image: redis:7-alpine
@@ -56,12 +70,14 @@ services:
       redis-master:
         condition: service_healthy
       redis-replica:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./redis/sentinel1.conf:/etc/redis/sentinel.conf:ro
     command: sh -c "cp /etc/redis/sentinel.conf /tmp/sentinel.conf && redis-sentinel /tmp/sentinel.conf"
     ports:
       - "26379:26379"
+    networks:
+      - appnet
 
   redis-sentinel-2:
     image: redis:7-alpine
@@ -69,12 +85,14 @@ services:
       redis-master:
         condition: service_healthy
       redis-replica:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./redis/sentinel2.conf:/etc/redis/sentinel.conf:ro
     command: sh -c "cp /etc/redis/sentinel.conf /tmp/sentinel.conf && redis-sentinel /tmp/sentinel.conf"
     ports:
       - "26380:26379"
+    networks:
+      - appnet
 
   redis-sentinel-3:
     image: redis:7-alpine
@@ -82,12 +100,14 @@ services:
       redis-master:
         condition: service_healthy
       redis-replica:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./redis/sentinel3.conf:/etc/redis/sentinel.conf:ro
     command: sh -c "cp /etc/redis/sentinel.conf /tmp/sentinel.conf && redis-sentinel /tmp/sentinel.conf"
     ports:
       - "26381:26379"
+    networks:
+      - appnet
 
   flight-service:
     build:
@@ -108,7 +128,15 @@ services:
         condition: service_healthy
       redis-master:
         condition: service_healthy
+      redis-sentinel-1:
+        condition: service_started
+      redis-sentinel-2:
+        condition: service_started
+      redis-sentinel-3:
+        condition: service_started
     restart: on-failure
+    networks:
+      - appnet
 
   booking-service:
     build:
@@ -131,7 +159,13 @@ services:
       flight-service:
         condition: service_started
     restart: on-failure
+    networks:
+      - appnet
 
 volumes:
   booking_data:
   flight_data:
+
+networks:
+  appnet:
+    driver: bridge

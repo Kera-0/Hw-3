@@ -1,6 +1,9 @@
 syntax = "proto3";
+
 package flight;
-option go_package = "flight-booking/gen/flight";
+
+option go_package = "flight-booking/gen/flight;flight";
+
 import "google/protobuf/timestamp.proto";
 
 enum FlightStatus {
@@ -44,8 +47,9 @@ message SeatReservationInfo {
 message SearchFlightsRequest {
   string origin = 1;
   string destination = 2;
-  string date = 3;
+  google.protobuf.Timestamp date = 3;
 }
+
 message SearchFlightsResponse {
   repeated FlightInfo flights = 1;
 }
@@ -53,6 +57,7 @@ message SearchFlightsResponse {
 message GetFlightRequest {
   string id = 1;
 }
+
 message GetFlightResponse {
   FlightInfo flight = 1;
 }
@@ -62,6 +67,7 @@ message ReserveSeatsRequest {
   string booking_id = 2;
   int32 seat_count = 3;
 }
+
 message ReserveSeatsResponse {
   SeatReservationInfo reservation = 1;
 }
@@ -69,6 +75,7 @@ message ReserveSeatsResponse {
 message ReleaseReservationRequest {
   string booking_id = 1;
 }
+
 message ReleaseReservationResponse {
   SeatReservationInfo reservation = 1;
 }
@@ -82,6 +89,7 @@ message UpdateFlightRequest {
   optional double price = 6;
   optional FlightStatus status = 7;
 }
+
 message UpdateFlightResponse {
   FlightInfo flight = 1;
 }
